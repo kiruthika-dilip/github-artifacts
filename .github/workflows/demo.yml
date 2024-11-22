@@ -39,5 +39,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      #steps to add deploying the artifacts into the web-server
+      - name: Downloading Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files #using same name as uploading build artifacts, it will grab the zip file from the build upload artifacts, downloaded and unzipped over here
+      - name: Ouptut Contents   #to view the output of the dist-file folder
+        run: ls
       - name: Deploy
         run: echo "Deploying..."
