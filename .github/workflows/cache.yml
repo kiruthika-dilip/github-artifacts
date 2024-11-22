@@ -1,0 +1,67 @@
+name: Deploy website
+on:
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm   #this path is used by npm tool where we are now storing the cache across jobs and acorss workflows
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json')}}        
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint code
+        run: npm run lint
+      - name: Test code
+        run: npm run test
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    #"outputs" key should be added before steps. "Outputs" allows us to define any ouputs of our choice and as many outputs as we want.
+    outputs:
+      script-file: ${{ steps.publish.outputs.script-file }}     #the name of the identifier script-file is upto your choice, we are getting output for all the steps or job
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      #we should execute cache step before installing the dependencies, as this dependencies will be used by next build job, so we are caching it
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm   #this path is used by npm tool where we are now storing the cache across jobs and acorss workflows
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json')}}
+      - name: Install dependencies
+        run: npm ci
+      - name: Build website
+        run: npm run build
+      #adding new steps for getting the file names, which means output of the file name, we can use it in deploy job
+      - name: Publish JS name
+        id: publish
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
+        #adding new step for uploading artifacts
+      - name: Uploading Job Artifacts
+        uses: actions/upload-artifact@v3 #this action is used to upload the artifacts into archieve and in with we are providing some configurations
+        with:
+          name: dist-files #the name of the folder either will be build or dist-file, it is upto you
+          path:
+            dist #another way of adding the path
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      #steps to add deploying the artifacts into the web-server
+      - name: Downloading Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files #using same name as uploading build artifacts, it will grab the zip file from the build upload artifacts, downloaded and unzipped over here
+      - name: Ouptut Contents   #to view the output of the dist-file folder
+        run: ls
+      - name: Output file name
+        run: echo "${{ needs.build.outputs.script-file  }}"
+      - name: Deploy
+        run: echo "Deploying..."
