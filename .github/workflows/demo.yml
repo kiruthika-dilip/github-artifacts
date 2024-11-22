@@ -30,9 +30,11 @@ jobs:
         uses: actions/upload-artifact@v3 #this action is used to upload the artifacts into archieve and in with we are providing some configurations
         with:
           name: dist-files #the name of the folder either will be build or dist-file, it is upto you
-          path: | #adding pipe symbol here to add the multiple file in artifacts path
-            dist 
-            package.json
+          #path: | #adding pipe symbol here to add the multiple file in artifacts path
+           # dist 
+            #package.json
+          path:
+            build #another way of adding the path
   deploy:
     needs: build
     runs-on: ubuntu-latest
