@@ -34,7 +34,7 @@ jobs:
            # dist 
             #package.json
           path:
-            build #another way of adding the path
+            dist #another way of adding the path
   deploy:
     needs: build
     runs-on: ubuntu-latest
